@@ -1,30 +1,39 @@
 package org.example;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CardTest {
+    private Card card;
+    private boolean actionExecuted;
 
+    @BeforeEach
+    void setUp() {
+        actionExecuted = false;
+        card = new Card(
+                "AHHHH!!",
+                "All other players return 1 pigeon to the flock",
+                () -> actionExecuted = true // mock action
+        );
+    }
 
     @Test
     void testGetName() {
-        String name = "AHHHH!!";
-        String description = "All other players return 1 pigeon to the flock";
-
-        Card card1 = new Card(name,description);
-
-        assertEquals(name, card1.getName());
+        assertEquals("AHHHH!!", card.getName());
     }
 
     @Test
     void testGetDescription() {
-        String name = "AHHHH!!";
-        String description = "All other players return 1 pigeon to the flock";
+        assertEquals("All other players return 1 pigeon to the flock", card.getDescription());
+    }
 
-        Card card1 = new Card(name,description);
-
-        assertEquals(description, card1.getDescription());
+    @Test
+    void testPerformActionRunsAction() {
+        assertFalse(actionExecuted, "Action should not be executed before calling performAction()");
+        card.performAction();
+        assertTrue(actionExecuted, "Action should have been executed after calling performAction()");
     }
 
 

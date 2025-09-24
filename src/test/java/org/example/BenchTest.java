@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BenchTest {
 
-    Bench bench = new Bench(1);
+    Bench bench = new Bench();
 
     @Test
     void testGetNumPigeons() {
@@ -26,7 +26,14 @@ public class BenchTest {
     }
 
     @Test
-    void testGetPlayer() {
-        assertEquals(1, bench.getPlayer());
+    void testSubtractPigeonsMin() {
+        bench.subtractPigeons(4);
+        assertEquals(0, bench.getNumPigeons());
+    }
+
+    @Test
+    void testSetNumberPigeons() {
+        bench.setNumberPigeons(5);
+        assertEquals(5, bench.getNumPigeons());
     }
 }

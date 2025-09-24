@@ -2,18 +2,9 @@ package org.example;
 
 public class Bench {
     private int numPigeons = 3;
-    private final int player;
-
-    public Bench(int player) {
-        this.player = player;
-    }
 
     public int getNumPigeons() {
         return numPigeons;
-    }
-
-    public int getPlayer() {
-        return player;
     }
 
     public void addPigeons(int num) {
@@ -21,6 +12,10 @@ public class Bench {
     }
 
     public void subtractPigeons(int num) {
-        numPigeons -= num;
+        numPigeons = Math.max(0, numPigeons - num);
+    }
+
+    public void setNumberPigeons(int num) {
+        numPigeons = num;
     }
 }
