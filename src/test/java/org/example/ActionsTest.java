@@ -270,11 +270,11 @@ public class ActionsTest {
     }
 
     @Test
-    void testTakeTwoFromMostOneMax() {
+    void testTakeThreeFromMostOneMax() {
         Card c1 = new Card(
                 "Why",
                 "The player with the most pigeons returns 3 to the flock. (If there's a tie you choose who must return their pigeons to the flock)",
-                () -> Actions.takeTwoFromMost(all)
+                () -> Actions.takeThreeFromMost(all)
         );
         p1.getBench().setNumberPigeons(5);
         p2.getBench().setNumberPigeons(2);
@@ -292,13 +292,13 @@ public class ActionsTest {
     }
 
     @Test
-    void testTakeTwoFromMostTwoMax() {
+    void testTakeThreeFromMostTwoMax() {
         String simulatedInput = "3\n";
         System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
         Card c1 = new Card(
                 "Why",
                 "The player with the most pigeons returns 3 to the flock. (If there's a tie you choose who must return their pigeons to the flock)",
-                () -> Actions.takeTwoFromMost(all)
+                () -> Actions.takeThreeFromMost(all)
         );
         p1.getBench().setNumberPigeons(5);
         p2.getBench().setNumberPigeons(6);

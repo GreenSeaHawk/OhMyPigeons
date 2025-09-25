@@ -1,9 +1,6 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /*
 Game Flow:
@@ -19,12 +16,26 @@ Initialise game:
 
 
 public class Main {
+    private static final String csvPath= "src/main/resources/data/card-data.csv";
 
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        System.out.println("How many players are playing? (Enter 2-5)");
-        int numPlayers = sc.nextInt();
+        int numPlayers = 0;
+        while (true) {
+            System.out.println("How many players are playing? (Enter 2-5)");
+            try {
+                numPlayers = sc.nextInt();
+                if (numPlayers < 2 || numPlayers > 5) {
+                    System.out.println("Please enter a number between 2 and 5.");
+                    continue;
+                }
+                break; // valid input
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next(); // consume invalid token
+            }
+        }
         System.out.printf("You have chosen " + numPlayers + " players\n");
 
         // Create the players
@@ -38,64 +49,64 @@ public class Main {
             System.out.println("Created Player " + p.getPlayerNumber());
         }
 
-        Card c1 = new Card(
-                "AHHHH!!",
-                "All other players return 1 pigeon to the flock",
-                () -> Actions.removeOnePigeonFromEveryoneElse(players.toArray(new Player[0])) // <- wrapped in lambda
-        );
-        Card c2 = new Card(
-                "AHHHH!!",
-                "All other players return 1 pigeon to the flock",
-                () -> Actions.removeOnePigeonFromEveryoneElse(players.toArray(new Player[0])) // <- wrapped in lambda
-        );
-        Card c3 = new Card(
-                "I'll take that",
-                "Take 1 pigeon from another player",
-                () -> Actions.takeOnePigeonFromAnotherPlayer(players.toArray(new Player[0])) // <- wrapped in lambda
-        );
-        Card c4 = new Card(
-                "AHHHH!!",
-                "All other players return 1 pigeon to the flock",
-                () -> Actions.removeOnePigeonFromEveryoneElse(players.toArray(new Player[0])) // <- wrapped in lambda
-        );
-        Card c5 = new Card(
-                "AHHHH!!",
-                "All other players return 1 pigeon to the flock",
-                () -> Actions.removeOnePigeonFromEveryoneElse(players.toArray(new Player[0])) // <- wrapped in lambda
-        );
-        Card c6 = new Card(
-                "I'll take that",
-                "Take 1 pigeon from another player",
-                () -> Actions.takeOnePigeonFromAnotherPlayer(players.toArray(new Player[0])) // <- wrapped in lambda
-        );
+        // Create the deck
+        List<Card> startingDeck = DeckBuilder.buildDeck(csvPath, players);
+        Deck deck = new Deck(startingDeck);
+        deck.shuffle();
+        System.out.println("New deck created with " + deck.getDeck().size() + " cards");
 
-        players.get(0).addCardToHand(c1);
-        players.get(0).addCardToHand(c2);
-        players.get(0).addCardToHand(c3);
-        players.get(1).addCardToHand(c4);
-        players.get(1).addCardToHand(c5);
-        players.get(1).addCardToHand(c6);
+        // Deal 3 cards to each player
+        for (Player p : players) {
+            p.addCardToHand(deck.draw());
+            p.addCardToHand(deck.draw());
+            p.addCardToHand(deck.draw());
+        }
 
-        Datastore.saveValue("currentPlayer", players.get(0));
-        Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
-        System.out.println("Current player: Player " + currentPlayer.getPlayerNumber());
-        System.out.println("Choose a card to play: ");
-        currentPlayer.printHand();
-        int chosenCard = sc.nextInt();
-        currentPlayer.playCard(chosenCard);
+        // Verify each player has 3 cards
+        for (Player p : players) {
+            System.out.println("Player " + p.getPlayerNumber() + " has " + p.getHand().size() + " cards");
+        }
 
-        System.out.println("Player 1 pigeons: " + players.get(0).getBench().getNumPigeons());
-        System.out.println("Player 2 pigeons: " + players.get(1).getBench().getNumPigeons());
+        int counter = 0;
+        while (Utils.allBenchesBelowNine(players)) {
+            // Set player
+            int playerTurn = counter % numPlayers;
+            Datastore.saveValue("currentPlayer", players.get(playerTurn));
+            Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
+            System.out.println("");
+            System.out.println("Current player: Player " + currentPlayer.getPlayerNumber());
+            // --- Choose a card ---
+            int chosenCard = -1;
+            while (true) {
+                System.out.println("Choose a card to play: ");
+                currentPlayer.printHand();
+                try {
+                    chosenCard = sc.nextInt();
+                    if (chosenCard < 0 || chosenCard >= currentPlayer.getHand().size()) {
+                        System.out.println("Invalid choice. Please enter a number between 0 and " + (currentPlayer.getHand().size() - 1));
+                        continue;
+                    }
+                    break; // valid choice
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input. Please enter an integer.");
+                    sc.next(); // consume invalid token
+                }
+            }
+            currentPlayer.playCard(chosenCard);
+            System.out.println("Card played");
+            currentPlayer.addCardToHand(deck.draw());
+            System.out.println("Card drawn");
+            for (Player p : players) {
+                System.out.println("Player " + p.getPlayerNumber() + " has " + p.getBench().getNumPigeons() + " pigeons");
+            }
+            counter += 1;
+        }
+        for (Player p : players) {
+            if (p.getBench().getNumPigeons() >= 9)
+                System.out.println("Player " + p.getPlayerNumber() + " has won the game!");
+        }
+
         sc.close();
 
-
-
-//    public static boolean allBenchesBelowNine(Bench... benches) {
-//        for (Bench bench : benches) {
-//            if (bench.getNumPigeons() >= 9) {
-//                return false; // at least one bench has 9 or more pigeons
-//            }
-//        }
-//        return true; // all benches have fewer than 9 pigeons
     }
 }

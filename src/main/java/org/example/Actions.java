@@ -1,8 +1,6 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Actions {
 
@@ -18,17 +16,43 @@ public class Actions {
 
     public static void takeOnePigeonFromAnotherPlayer(Player[] allPlayers) {
         Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
-
         Scanner sc = new Scanner(System.in);
-        System.out.println("Who would you like to take a pigeon from?");
-        int targetPlayer = sc.nextInt();
+        Player targetPlayer = null;
 
-        for (Player p : allPlayers) {
-            if (p.getPlayerNumber() == targetPlayer && p.getBench().getNumPigeons() > 0) {
-                p.getBench().subtractPigeons(1);
-                currentPlayer.getBench().addPigeons(1);
-                break;
+        while (true) {
+            System.out.println("Who would you like to take a pigeon from?");
+            // List possible targets
+            for (Player p : allPlayers) {
+                if (!p.equals(currentPlayer)) {
+                    System.out.println("Player " + p.getPlayerNumber());
+                }
             }
+
+            try {
+                int targetNum = sc.nextInt();
+                targetPlayer = Arrays.stream(allPlayers)
+                        .filter(p -> p.getPlayerNumber() == targetNum && !p.equals(currentPlayer))
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetPlayer == null) {
+                    System.out.println("Invalid choice. You cannot target yourself or a non-existent player. Try again.");
+                    continue;
+                }
+                break; // valid target
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next(); // consume invalid input
+            }
+        }
+
+        // Execute the action
+        if (targetPlayer.getBench().getNumPigeons() > 0) {
+            targetPlayer.getBench().subtractPigeons(1);
+            currentPlayer.getBench().addPigeons(1);
+            System.out.println("One pigeon taken from Player " + targetPlayer.getPlayerNumber());
+        } else {
+            System.out.println("That player has no pigeons to take.");
         }
     }
 
@@ -59,18 +83,41 @@ public class Actions {
 
     public static void takeTwoGiveOnePigeon(Player[] allPlayers) {
         Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
-
         Scanner sc = new Scanner(System.in);
-        System.out.println("Who would you like to give a pigeon to? (from the flock)");
-        int targetPlayer = sc.nextInt();
+        Player targetPlayer = null;
 
-        for (Player p : allPlayers) {
-            if (p.getPlayerNumber() == targetPlayer) {
-                p.getBench().addPigeons(1);
-                currentPlayer.getBench().addPigeons(2);
-                break;
+        while (true) {
+            System.out.println("Who would you like to give a pigeon to? (from the flock)");
+
+            // List possible target players (excluding current player if needed)
+            for (Player p : allPlayers) {
+                if (!p.equals(currentPlayer)) {
+                    System.out.println("Player " + p.getPlayerNumber());
+                }
+            }
+
+            try {
+                int targetNum = sc.nextInt();
+                targetPlayer = Arrays.stream(allPlayers)
+                        .filter(p -> p.getPlayerNumber() == targetNum && !p.equals(currentPlayer))
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetPlayer == null) {
+                    System.out.println("Invalid choice. You cannot target yourself or a non-existent player. Try again.");
+                    continue;
+                }
+                break; // valid target
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next(); // consume invalid token
             }
         }
+
+        // Execute the action
+        targetPlayer.getBench().addPigeons(1);
+        currentPlayer.getBench().addPigeons(2);
+        System.out.println("Gave 1 pigeon to Player " + targetPlayer.getPlayerNumber() + " and took 2 pigeons from the flock.");
     }
 
     public static void belowFourTakeTwo(Player[] allPlayers) {
@@ -89,14 +136,43 @@ public class Actions {
 
     public static void swapBench(Player[] allPlayers) {
         Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
-        int currentPlayerBench = currentPlayer.getBench().getNumPigeons();
         Scanner sc = new Scanner(System.in);
-        System.out.println("Who would you like to swap benches with?");
-        int targetPlayerNum = sc.nextInt();
-        Player targetPlayer = allPlayers[targetPlayerNum -1];
+        Player targetPlayer = null;
+
+        while (true) {
+            System.out.println("Who would you like to swap benches with?");
+            // List valid target players (excluding current player)
+            for (Player p : allPlayers) {
+                if (!p.equals(currentPlayer)) {
+                    System.out.println("Player " + p.getPlayerNumber());
+                }
+            }
+
+            try {
+                int targetNum = sc.nextInt();
+                targetPlayer = Arrays.stream(allPlayers)
+                        .filter(p -> p.getPlayerNumber() == targetNum && !p.equals(currentPlayer))
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetPlayer == null) {
+                    System.out.println("Invalid choice. You cannot swap with yourself or a non-existent player. Try again.");
+                    continue;
+                }
+                break; // valid target
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next(); // consume invalid token
+            }
+        }
+
+        // Swap benches
+        int currentPlayerBench = currentPlayer.getBench().getNumPigeons();
         int targetPlayerBench = targetPlayer.getBench().getNumPigeons();
         currentPlayer.getBench().setNumberPigeons(targetPlayerBench);
         targetPlayer.getBench().setNumberPigeons(currentPlayerBench);
+
+        System.out.println("Swapped benches with Player " + targetPlayer.getPlayerNumber());
     }
 
     public static void takeOneFromAll(Player[] allPlayers) {
@@ -110,48 +186,89 @@ public class Actions {
         }
     }
 
-    public static void takeTwoFromMost(Player[] allPlayers) {
-        int max = 0;
+    public static void takeThreeFromMost(Player[] allPlayers) {
+        // Find the maximum number of pigeons
+        int max = Arrays.stream(allPlayers)
+                .mapToInt(p -> p.getBench().getNumPigeons())
+                .max()
+                .orElse(0);
 
-        // Find max
-        for (Player p : allPlayers) {
-            int pigeons = p.getBench().getNumPigeons();
-            if (pigeons > max) {
-                max = pigeons;
-            }
-        }
+        // Find all players with max pigeons
+        List<Player> maxPlayers = Arrays.stream(allPlayers)
+                .filter(p -> p.getBench().getNumPigeons() == max)
+                .toList();
 
-        List<Player> result = new ArrayList<>();
-        for (Player p : allPlayers) {
-            if (p.getBench().getNumPigeons() == max) {
-                result.add(p);
-            }
-        }
+        Player targetPlayer = null;
+        Scanner sc = new Scanner(System.in);
 
-        if (result.size() > 1) {
-            Scanner sc = new Scanner(System.in);
-            System.out.println("Multiple players have the most pigeons, " +
-                    "which of the following players would you like to lose 3 pigeons?");
-            for (Player p: result) {
-                System.out.println("Player " + p.getPlayerNumber());
+        if (maxPlayers.size() > 1) {
+            // Multiple players have max pigeons, ask which one to target
+            while (true) {
+                System.out.println("Multiple players have the most pigeons. " +
+                        "Choose a player to lose 3 pigeons:");
+                for (Player p : maxPlayers) {
+                    System.out.println("Player " + p.getPlayerNumber());
+                }
+
+                try {
+                    int choice = sc.nextInt();
+                    targetPlayer = maxPlayers.stream()
+                            .filter(p -> p.getPlayerNumber() == choice)
+                            .findFirst()
+                            .orElse(null);
+
+                    if (targetPlayer == null) {
+                        System.out.println("Invalid choice. Try again.");
+                        continue;
+                    }
+                    break; // valid choice
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input. Please enter an integer.");
+                    sc.next(); // consume invalid token
+                }
             }
-            int targetPlayer = sc.nextInt();
-            allPlayers[targetPlayer -1].getBench().subtractPigeons(3);
         } else {
-            result.get(0).getBench().subtractPigeons(3);
+            // Only one player has the max pigeons
+            targetPlayer = maxPlayers.get(0);
         }
+
+        // Apply action
+        targetPlayer.getBench().subtractPigeons(3);
+        System.out.println("Player " + targetPlayer.getPlayerNumber() + " loses 3 pigeons.");
     }
 
     public static void onePlayerLoseTwo(Player[] allPlayers) {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Who would you like to lose 2 pigeons?");
-        int targetPlayer = sc.nextInt();
+        Player targetPlayer = null;
 
-        for (Player p : allPlayers) {
-            if (p.getPlayerNumber() == targetPlayer) {
-                p.getBench().subtractPigeons(2);
+        while (true) {
+            System.out.println("Who would you like to lose 2 pigeons?");
+            // List all valid players
+            for (Player p : allPlayers) {
+                System.out.println("Player " + p.getPlayerNumber());
+            }
+
+            try {
+                int targetNum = sc.nextInt();
+                targetPlayer = Arrays.stream(allPlayers)
+                        .filter(p -> p.getPlayerNumber() == targetNum)
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetPlayer == null) {
+                    System.out.println("Invalid choice. Please select a valid player.");
+                    continue;
+                }
+                break; // valid target
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next(); // consume invalid token
             }
         }
+
+        // Execute action
+        targetPlayer.getBench().subtractPigeons(2);
+        System.out.println("Player " + targetPlayer.getPlayerNumber() + " loses 2 pigeons.");
     }
 
 }
