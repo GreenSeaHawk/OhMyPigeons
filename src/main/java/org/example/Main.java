@@ -20,6 +20,14 @@ public class Main {
 
 
     public static void main(String[] args) {
+        String pigeon = """
+       __
+     >(o )__
+       (  ._\\
+        `---'
+""";
+
+        System.out.println(pigeon);
         Scanner sc = new Scanner(System.in);
         int numPlayers = 0;
         while (true) {
@@ -105,7 +113,7 @@ public class Main {
             if (p.getBench().getNumPigeons() >= 9)
                 System.out.println("Player " + p.getPlayerNumber() + " has won the game!");
         }
-
+        System.out.println(pigeon);
         sc.close();
 
     }

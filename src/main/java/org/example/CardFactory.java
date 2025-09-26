@@ -29,6 +29,8 @@ public class CardFactory {
                 return () -> Actions.takeThreeFromMost(players.toArray(new Player[0]));
             case "onePlayerLoseTwo":
                 return () -> Actions.onePlayerLoseTwo(players.toArray(new Player[0]));
+            case "ohMyPigeons":
+                return () -> Actions.ohMyPigeons(players.toArray(new Player[0]));
             default:
                 throw new IllegalArgumentException("Unknown action: " + actionName);
         }

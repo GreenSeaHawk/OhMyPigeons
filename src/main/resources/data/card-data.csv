@@ -11,3 +11,4 @@ Swapsies,Trade benches with another player,3,swapBench
 Attack,Take 1 pigeon from each other player,3,takeOneFromAll
 Why,The player with the most pigeons returns 3 to the flock. (If there's a tie you choose who must return their pigeons to the flock),3,takeThreeFromMost
 Byeee,Choose another player to return 2 pigeons to the flock,3,onePlayerLoseTwo
+OH MY PIGEONS,Roll the die! Take pigeons or flick poo!,11,ohMyPigeons

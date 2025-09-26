@@ -240,23 +240,26 @@ public class Actions {
     public static void onePlayerLoseTwo(Player[] allPlayers) {
         Scanner sc = new Scanner(System.in);
         Player targetPlayer = null;
+        Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
 
         while (true) {
             System.out.println("Who would you like to lose 2 pigeons?");
             // List all valid players
             for (Player p : allPlayers) {
-                System.out.println("Player " + p.getPlayerNumber());
+                if (!p.equals(currentPlayer)) {
+                    System.out.println("Player " + p.getPlayerNumber());
+                }
             }
 
             try {
                 int targetNum = sc.nextInt();
                 targetPlayer = Arrays.stream(allPlayers)
-                        .filter(p -> p.getPlayerNumber() == targetNum)
+                        .filter(p -> p.getPlayerNumber() == targetNum && !p.equals(currentPlayer)) // exclude self
                         .findFirst()
                         .orElse(null);
 
                 if (targetPlayer == null) {
-                    System.out.println("Invalid choice. Please select a valid player.");
+                    System.out.println("Invalid choice. You can’t pick yourself. Try again.");
                     continue;
                 }
                 break; // valid target
@@ -271,4 +274,96 @@ public class Actions {
         System.out.println("Player " + targetPlayer.getPlayerNumber() + " loses 2 pigeons.");
     }
 
+    public static void ohMyPigeons(Player[] allPlayers) {
+        Random rand = new Random();
+        Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
+        int diceRoll = rand.nextInt(6) + 1;
+        switch (diceRoll) {
+            case 1,6:
+                System.out.println("Flick poo");
+                flickPoo(allPlayers);
+                break;
+            case 2:
+                System.out.println("Take 2 pigeons from other players");
+                takeOnePigeonFromAnotherPlayer(allPlayers);
+                takeOnePigeonFromAnotherPlayer(allPlayers);
+                break;
+            case 3:
+                System.out.println("Take 3 pigeons from the flock");
+                currentPlayer.getBench().addPigeons(3);
+                break;
+            case 4:
+                System.out.println("Take 4 pigeons from other players");
+                takeOnePigeonFromAnotherPlayer(allPlayers);
+                takeOnePigeonFromAnotherPlayer(allPlayers);
+                takeOnePigeonFromAnotherPlayer(allPlayers);
+                takeOnePigeonFromAnotherPlayer(allPlayers);
+                break;
+            case 5:
+                System.out.println("Take 5 pigeons from the flock");
+                currentPlayer.getBench().addPigeons(5);
+                break;
+        }
+    }
+
+    public static void flickPoo(Player[] allPlayers) {
+        Player currentPlayer = Datastore.retrieveValue("currentPlayer", Player.class);
+        Scanner sc = new Scanner(System.in);
+        Player targetPlayer = null;
+
+        while (true) {
+            System.out.println("Who would you like to flick poo at?");
+            // List valid target players (excluding current player)
+            for (Player p : allPlayers) {
+                if (!p.equals(currentPlayer)) {
+                    System.out.println("Player " + p.getPlayerNumber());
+                }
+            }
+
+            try {
+                int targetNum = sc.nextInt();
+                targetPlayer = Arrays.stream(allPlayers)
+                        .filter(p -> p.getPlayerNumber() == targetNum && !p.equals(currentPlayer))
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetPlayer == null) {
+                    System.out.println("Invalid choice. You can't flick poo at yourself!");
+                    continue;
+                }
+                break; // valid target
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next(); // consume invalid token
+            }
+        }
+        Random rand = new Random();
+        int random = rand.nextInt(14);
+        switch (random) {
+            case 0,1,2,3:
+                System.out.println("You missed! No pigeons hit.");
+                break;
+            case 4,5,6:
+                System.out.println("You took out 1 pigeon!");
+                targetPlayer.getBench().subtractPigeons(1);
+                break;
+            case 7,8,9:
+                System.out.println("You took out 2 pigeons!");
+                targetPlayer.getBench().subtractPigeons(2);
+                break;
+            case 10,11:
+                System.out.println("You took out 3 pigeons!");
+                targetPlayer.getBench().subtractPigeons(3);
+                break;
+            case 12:
+                System.out.println("You took out 4 pigeons!");
+                targetPlayer.getBench().subtractPigeons(4);
+                break;
+            case 13:
+                System.out.println("You took out 5 pigeons!");
+                targetPlayer.getBench().subtractPigeons(5);
+                break;
+
+        }
+    }
 }
